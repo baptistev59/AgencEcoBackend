@@ -36,10 +36,10 @@ Une fois les dépendances installées, vous pouvez démarrer le serveur avec :
 
 ```npm start```
 
-Votre serveur devrait maintenant être en cours d'exécution et accessible localement à l'adresse `http://localhost:3000`.
+Votre serveur devrait maintenant être en cours d'exécution et accessible localement à l'adresse `http://localhost:3000/todos`.
 
 ## Utilisation
 
-Une fois le serveur démarré, vous pouvez accéder à l'API du Todo List Backend. Pour plus de détails sur les endpoints disponibles et comment les utiliser, veuillez vous référer à la documentation de l'API accessible via [Swagger UI](http://localhost:3000/api-docs) après avoir démarré le serveur.
+Une fois le serveur démarré, vous pouvez accéder à l'API du Todo List Backend. Pour plus de détails sur les endpoints disponibles et comment les utiliser, veuillez vous référer à la documentation de l'API accessible via [http://localhost:3000/api-docs](http://localhost:3000/api-docs) après avoir démarré le serveur.
 
 
