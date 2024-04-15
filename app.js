@@ -241,16 +241,52 @@ app.post('/todos', (req, res) => {
  *         description: The todo was not found
  */
 app.put('/todos/:id', (req, res) => {
-    const index = todos.findIndex(t => t.id == req.params.id);
-    if (index >= 0) {
-        todos[index] = {
-            ...todos[index],
-            ...req.body
-        };
-        res.status(200).json(todos[index]);
-    } else {
-        res.status(404).send("Todo not found");
-    }
+  // Correction: Accéder au bon tableau qui contient les todos.
+  const index = todos[0].todolist.findIndex(t => t.id == req.params.id);
+
+  if (index >= 0) {
+      // Correction: Mise à jour correcte en utilisant l'index trouvé dans todolist.
+      todos[0].todolist[index] = {
+          ...todos[0].todolist[index],
+          ...req.body
+      };
+      // Correction: Renvoyer le todo mis à jour depuis le tableau todolist.
+      res.status(200).json(todos[0].todolist[index]);
+  } else {
+      res.status(404).send("Todo not found");
+  }
+});
+
+/**
+ * @swagger
+ * /todos/{id}:
+ *   delete:
+ *     summary: Deletes a todo
+ *     tags: [Todos]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: The todo id to delete
+ *     responses:
+ *       200:
+ *         description: Todo deleted successfully
+ *       404:
+ *         description: The todo was not found
+ */
+app.delete('/todos/:id', (req, res) => {
+  // Accéder à l'index du todo à supprimer dans la liste des todos
+  const index = todos[0].todolist.findIndex(t => t.id == req.params.id);
+
+  if (index >= 0) {
+      // Supprimer le todo du tableau
+      todos[0].todolist.splice(index, 1);
+      res.status(200).send("Todo deleted successfully");
+  } else {
+      res.status(404).send("Todo not found");
+  }
 });
 
 
