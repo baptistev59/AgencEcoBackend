@@ -18,13 +18,13 @@ Suivez ces étapes pour configurer le backend sur votre machine locale :
 
    Ouvrez un terminal et utilisez la commande suivante pour cloner le dépôt GitHub :
 
-```git clone https://github.com/gducampus/totolist.git```
+```git clone https://github.com/gducampus/backendBlogReact```
 
 2. **Installer les dépendances**
 
 Naviguez dans le répertoire du projet cloné et exécutez :
 
-```cd totolist```
+```cd backendBlogReact```
 
 ```npm install```
 
@@ -36,7 +36,7 @@ Une fois les dépendances installées, vous pouvez démarrer le serveur avec :
 
 ```npm start```
 
-Votre serveur devrait maintenant être en cours d'exécution et accessible localement à l'adresse `http://localhost:3000/todos`.
+Votre serveur devrait maintenant être en cours d'exécution et accessible localement à l'adresse `http://localhost:3000/artilces`.
 
 ## Utilisation
 
