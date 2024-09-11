@@ -3,113 +3,87 @@ const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const cors = require('cors');
-
-// Swagger options
-const options = {
-    definition: {
-        openapi: '3.0.0',
-        info: {
-            title: 'Articles API',
-            version: '1.0.0',
-        },
-    },
-    apis: ['./app.js'], // chemin des fichiers contenant les annotations Swagger
-};
-
-const openapiSpecification = swaggerJsdoc(options);
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-const articles = [
+const SECRET_KEY = "votre_cle_secrete";
+
+// Utilisateurs pré-enregistrés avec mots de passe hachés
+const users = [
     {
         id: 1,
-        title: "Les bases de Node.js",
-        description: "Introduction à Node.js et ses fonctionnalités principales.",
-        publicationDate: "2023-01-01",
+        email: "john@example.com",
+        password: bcrypt.hashSync("password123", 10), // Mot de passe haché
+        name: "John Doe",
     },
     {
         id: 2,
-        title: "REST API avec Express",
-        description: "Comment créer une API RESTful avec Express.js.",
-        publicationDate: "2023-02-15",
+        email: "jane@example.com",
+        password: bcrypt.hashSync("mypassword", 10), // Mot de passe haché
+        name: "Jane Smith",
     },
-    {
-        id: 3,
-        title: "MongoDB pour les débutants",
-        description: "Guide sur l'utilisation de MongoDB pour des projets simples.",
-        publicationDate: "2023-03-10",
-    },
-    {
-        id: 4,
-        title: "Déploiement avec Docker",
-        description: "Utilisation de Docker pour containeriser les applications.",
-        publicationDate: "2023-04-05",
-    },
-    {
-        id: 5,
-        title: "Comprendre les Promises en JavaScript",
-        description: "Introduction aux Promises et à leur utilisation.",
-        publicationDate: "2023-05-12",
-    },
-    {
-        id: 6,
-        title: "Utilisation des WebSockets",
-        description: "Mettre en place des WebSockets pour des applications temps réel.",
-        publicationDate: "2023-06-18",
-    },
-    {
-        id: 7,
-        title: "Introduction à GraphQL",
-        description: "Découverte de GraphQL pour remplacer REST dans certaines situations.",
-        publicationDate: "2023-07-25",
-    },
-    {
-        id: 8,
-        title: "Sécurité dans les API REST",
-        description: "Principes de sécurité pour protéger vos API REST.",
-        publicationDate: "2023-08-30",
-    },
-    {
-        id: 9,
-        title: "Tests unitaires avec Jest",
-        description: "Introduction aux tests unitaires en JavaScript avec Jest.",
-        publicationDate: "2023-09-22",
-    },
+];
+
+// Articles existants
+const articles = [
+    { id: 1, title: "Les bases de Node.js", description: "Introduction à Node.js", publicationDate: "2023-01-01" },
+    { id: 2, title: "REST API avec Express", description: "API RESTful avec Express.js", publicationDate: "2023-02-15" },
+    // autres articles...
 ];
 
 /**
  * @swagger
- * components:
- *   schemas:
- *     Article:
- *       type: object
- *       required:
- *         - id
- *         - title
- *         - description
- *         - publicationDate
- *       properties:
- *         id:
- *           type: integer
- *           description: ID unique de l'article
- *         title:
- *           type: string
- *           description: Titre de l'article
- *         description:
- *           type: string
- *           description: Description de l'article
- *         publicationDate:
- *           type: string
- *           format: date
- *           description: Date de publication de l'article
- *       example:
- *         id: 1
- *         title: "Les bases de Node.js"
- *         description: "Introduction à Node.js et ses fonctionnalités principales."
- *         publicationDate: "2023-01-01"
+ * /login:
+ *   post:
+ *     summary: Authentification des utilisateurs
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email de l'utilisateur
+ *               password:
+ *                 type: string
+ *                 description: Mot de passe de l'utilisateur
+ *     responses:
+ *       200:
+ *         description: Authentification réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Email ou mot de passe incorrect
  */
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    
+    const user = users.find(u => u.email === email);
+    if (!user) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+    }
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+
+    res.status(200).json({ token });
+});
 
 /**
  * @swagger
@@ -143,10 +117,10 @@ app.get('/articles', (req, res) => {
  *         schema:
  *           type: integer
  *         required: true
- *         description: ID de l'article
+ *         description: ID de l'article à récupérer
  *     responses:
  *       200:
- *         description: L'article correspondant à l'ID
+ *         description: Article récupéré avec succès
  *         content:
  *           application/json:
  *             schema:
@@ -157,7 +131,7 @@ app.get('/articles', (req, res) => {
 app.get('/articles/:id', (req, res) => {
     const article = articles.find(a => a.id === parseInt(req.params.id));
     if (!article) {
-        return res.status(404).send('Article not found');
+        return res.status(404).send('Article non trouvé');
     }
     res.status(200).json(article);
 });
@@ -197,7 +171,7 @@ app.post('/articles', (req, res) => {
  * @swagger
  * /articles/{id}:
  *   put:
- *     summary: Met à jour un article
+ *     summary: Met à jour un article par son ID
  *     tags: [Articles]
  *     parameters:
  *       - in: path
@@ -214,7 +188,7 @@ app.post('/articles', (req, res) => {
  *             $ref: '#/components/schemas/Article'
  *     responses:
  *       200:
- *         description: L'article mis à jour
+ *         description: Article mis à jour avec succès
  *         content:
  *           application/json:
  *             schema:
@@ -225,7 +199,7 @@ app.post('/articles', (req, res) => {
 app.put('/articles/:id', (req, res) => {
     const article = articles.find(a => a.id === parseInt(req.params.id));
     if (!article) {
-        return res.status(404).send('Article not found');
+        return res.status(404).send('Article non trouvé');
     }
 
     article.title = req.body.title || article.title;
@@ -257,12 +231,22 @@ app.put('/articles/:id', (req, res) => {
 app.delete('/articles/:id', (req, res) => {
     const articleIndex = articles.findIndex(a => a.id === parseInt(req.params.id));
     if (articleIndex === -1) {
-        return res.status(404).send('Article not found');
+        return res.status(404).send('Article non trouvé');
     }
 
     articles.splice(articleIndex, 1);
-    res.status(200).send('Article deleted successfully');
+    res.status(200).send('Article supprimé avec succès');
 });
+
+// Swagger documentation route
+const options = {
+    definition: {
+        openapi: '3.0.0',
+        info: { title: 'Articles API', version: '1.0.0' },
+    },
+    apis: ['./app.js'],
+};
+const openapiSpecification = swaggerJsdoc(options);
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
