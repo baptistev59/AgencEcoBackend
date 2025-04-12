@@ -1,4 +1,4 @@
-# Todo List API Backend
+# Backend AgencEco
 
 Ce projet est le backend pour l'application Todo List, destiné aux étudiants du Learning Campus pour le développement de projets frontend. Il fournit une API RESTful pour gérer une liste de tâches (todos).
 
@@ -18,13 +18,13 @@ Suivez ces étapes pour configurer le backend sur votre machine locale :
 
    Ouvrez un terminal et utilisez la commande suivante pour cloner le dépôt GitHub :
 
-```git clone https://github.com/gducampus/backendBlogReact```
+```git clone https://github.com/gducampus/AgencEcoBackend``
 
 2. **Installer les dépendances**
 
 Naviguez dans le répertoire du projet cloné et exécutez :
 
-```cd backendBlogReact```
+```cd AgencEcoBackend```
 
 ```npm install```
 
