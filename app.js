@@ -3,26 +3,32 @@ const bodyParser = require('body-parser');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Données d'utilisateurs fictifs (non utilisées ici, juste à titre d’exemple)
+const SECRET_KEY = "votre_cle_secrete";
+
+// Utilisateurs avec mots de passe hachés
 const users = [
     {
         id: 1,
         email: "john@example.com",
+        password: bcrypt.hashSync("password123", 10),
         name: "John Doe",
     },
     {
         id: 2,
         email: "jane@example.com",
+        password: bcrypt.hashSync("mypassword", 10),
         name: "Jane Smith",
     },
 ];
 
-// Données d'articles (stockées en mémoire)
+// Articles enrichis
 const articles = [
     {
         id: 1,
@@ -42,14 +48,14 @@ const articles = [
         id: 3,
         title: "L’éco-conception web expliquée",
         description: "Pourquoi l'éco-conception est essentielle dans le développement moderne.",
-        content: "L’éco-conception consiste à minimiser l’impact environnemental d’un site web tout en maintenant sa performance. Elle repose sur des principes comme la réduction du poids des pages, l’optimisation des images, et la sobriété fonctionnelle.",
+        content: "L’éco-conception consiste à minimiser l’impact environnemental d’un site web tout en maintenant sa performance...",
         publicationDate: "2023-03-20",
     },
     {
         id: 4,
         title: "Les bonnes pratiques du HTML sémantique",
         description: "Un site web accessible commence par une structure HTML claire.",
-        content: "Utiliser les bonnes balises HTML (comme <article>, <section>, <nav>, etc.) améliore l’accessibilité et le référencement naturel (SEO). Ces balises permettent aussi aux lecteurs d’écran de mieux interpréter le contenu.",
+        content: "Utiliser les bonnes balises HTML (comme <article>, <section>, <nav>, etc.) améliore l’accessibilité et le référencement naturel...",
         publicationDate: "2023-04-05",
     }
 ];
@@ -77,6 +83,53 @@ const articles = [
  *           type: string
  *           format: date
  */
+
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Authentification des utilisateurs
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Authentification réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       401:
+ *         description: Email ou mot de passe incorrect
+ */
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+
+    const user = users.find(u => u.email === email);
+    if (!user) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+    }
+
+    const isPasswordValid = bcrypt.compareSync(password, user.password);
+    if (!isPasswordValid) {
+        return res.status(401).json({ message: "Email ou mot de passe incorrect" });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email }, SECRET_KEY, { expiresIn: '1h' });
+    res.status(200).json({ token });
+});
 
 /**
  * @swagger
@@ -110,7 +163,6 @@ app.get('/articles', (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID de l'article à récupérer
  *     responses:
  *       200:
  *         description: Article récupéré avec succès
@@ -143,7 +195,7 @@ app.get('/articles/:id', (req, res) => {
  *             $ref: '#/components/schemas/Article'
  *     responses:
  *       201:
- *         description: L'article a été créé
+ *         description: Article créé avec succès
  *         content:
  *           application/json:
  *             schema:
@@ -165,7 +217,7 @@ app.post('/articles', (req, res) => {
  * @swagger
  * /articles/{id}:
  *   put:
- *     summary: Met à jour un article existant
+ *     summary: Met à jour un article
  *     tags: [Articles]
  *     parameters:
  *       - in: path
@@ -181,11 +233,7 @@ app.post('/articles', (req, res) => {
  *             $ref: '#/components/schemas/Article'
  *     responses:
  *       200:
- *         description: Article mis à jour avec succès
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Article'
+ *         description: Article mis à jour
  *       404:
  *         description: Article non trouvé
  */
@@ -215,10 +263,9 @@ app.put('/articles/:id', (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
- *         description: ID de l'article à supprimer
  *     responses:
  *       200:
- *         description: Article supprimé avec succès
+ *         description: Article supprimé
  *       404:
  *         description: Article non trouvé
  */
@@ -238,59 +285,16 @@ const options = {
         info: {
             title: 'AgencEco Articles API',
             version: '1.0.0',
-            description: 'API pour la gestion des actualités sur le site AgencEco',
+            description: 'API pour la gestion des actualités du site AgencEco',
         },
     },
     apis: ['./app.js'],
 };
+const openapiSpecification = swaggerJsdoc(options);
 
-const swaggerSpec = swaggerJsdoc(options);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-/**
- * @swagger
- * /login:
- *   post:
- *     summary: Simule l'authentification d'un utilisateur
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 example: john@example.com
- *     responses:
- *       200:
- *         description: Connexion simulée réussie
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 message:
- *                   type: string
- *                   example: Utilisateur connecté
- */
-app.post('/login', (req, res) => {
-    const { email } = req.body;
-    const user = users.find(u => u.email === email);
-
-    if (!user) {
-        return res.status(404).json({ message: "Utilisateur non trouvé" });
-    }
-
-    // Simulation d'une connexion sans mot de passe ni JWT
-    res.status(200).json({ message: "Utilisateur connecté" });
-});
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 app.listen(3000, () => {
     console.log('✅ Serveur lancé sur http://localhost:3000');
-    console.log('📚 Documentation Swagger sur http://localhost:3000/api-docs');
+    console.log('📚 Swagger dispo sur http://localhost:3000/api-docs');
 });
