@@ -247,6 +247,49 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
+/**
+ * @swagger
+ * /login:
+ *   post:
+ *     summary: Simule l'authentification d'un utilisateur
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: john@example.com
+ *     responses:
+ *       200:
+ *         description: Connexion simulée réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Utilisateur connecté
+ */
+app.post('/login', (req, res) => {
+    const { email } = req.body;
+    const user = users.find(u => u.email === email);
+
+    if (!user) {
+        return res.status(404).json({ message: "Utilisateur non trouvé" });
+    }
+
+    // Simulation d'une connexion sans mot de passe ni JWT
+    res.status(200).json({ message: "Utilisateur connecté" });
+});
+
+
 app.listen(3000, () => {
     console.log('✅ Serveur lancé sur http://localhost:3000');
     console.log('📚 Documentation Swagger sur http://localhost:3000/api-docs');
