@@ -26,6 +26,12 @@ const users = [
         password: bcrypt.hashSync("mypassword", 10),
         name: "Jane Smith",
     },
+    {
+        id: 3,
+        email: "baptistev59@free.fr",
+        password: bcrypt.hashSync("123", 10),
+        name: "Baptiste VANDAELE",
+    },
 ];
 
 // Articles enrichis
